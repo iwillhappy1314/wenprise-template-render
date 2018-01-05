@@ -8,8 +8,10 @@
   },
   "autoload": {
     "psr-4": {
-      "Wenprise\\": "src/"
-    }
+    },
+    "files": [
+      "src/loader.php"
+    ]
   },
   "license": "MIT",
   "authors": [
