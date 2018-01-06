@@ -25,10 +25,10 @@ if ( ! function_exists( 'wprs_render_template' ) ) {
 
 		// 如果第二个参数是数组，说明没有设置 $name, $name 的位置为 $args, 交换参数位置,
 		if ( is_array( $name ) ) {
-			$args = $name;
+			$args         = $name;
 			$default_path = $args;
-			$echo = $default_path;
-			$name = null;
+			$echo         = $default_path;
+			$name         = null;
 		}
 
 		$args = apply_filters( "render_template_part_{$slug}_args", $args, $slug, $name, $default_path, $echo );
@@ -67,45 +67,61 @@ if ( ! function_exists( 'wprs_render_template' ) ) {
 		 */
 
 		// 获取主题自定义模版目录名称
-		$default_path       = rtrim( $default_path, '/' );
-		$default_path_array = explode( '/', $default_path );
-		$folder_name        = $default_path_array[ count( $default_path_array ) - 1 ];
+		if ( '' !== $default_path ) {
+			$default_path       = rtrim( $default_path, '/' );
+			$default_path_array = explode( '/', $default_path );
+			$folder_name        = $default_path_array[ count( $default_path_array ) - 1 ];
 
-		// 查找主题的优先顺序为：主题中的指定模版 > 插件中的指定模版 > 主题中的默认模版 > 插件中的默认模版
-		if ( $name ) {
+			// 查找主题的优先顺序为：主题中的指定模版 > 插件中的指定模版 > 主题中的默认模版 > 插件中的默认模版
+			if ( $name ) {
 
-			// 优先查找主题中指定模板
-			$located = locate_template( [ "{$folder_name}/{$slug}-{$name}.php", "{$slug}-{$name}.php" ] );
+				// 优先查找主题中指定模板
+				$located = locate_template( [ "{$folder_name}/{$slug}-{$name}.php", "{$slug}-{$name}.php" ] );
 
-			// 如果主题中没有找到指定的模版，并且默认位置有这个模版，加载默认位置中的模板
-			if ( '' === $located ) {
-				if ( file_exists( $default_path . "/{$slug}-{$name}.php" ) ) {
-					$located = $default_path . "/{$slug}-{$name}.php";
-				} else {
+				// 如果主题中没有找到指定的模版，并且默认位置有这个模版，加载默认位置中的模板
+				if ( '' === $located ) {
+					if ( file_exists( $default_path . "/{$slug}-{$name}.php" ) ) {
+						$located = $default_path . "/{$slug}-{$name}.php";
+					} else {
 
-					$located = locate_template( [ "{$folder_name}/{$slug}.php", "{$slug}.php" ] );
+						$located = locate_template( [ "{$folder_name}/{$slug}.php", "{$slug}.php" ] );
 
-					if ( '' === $located ) {
-						if ( file_exists( $default_path . "/{$slug}.php" ) ) {
-							$located = $default_path . "/{$slug}.php";
-						} else {
-							return false;
+						if ( '' === $located ) {
+							if ( file_exists( $default_path . "/{$slug}.php" ) ) {
+								$located = $default_path . "/{$slug}.php";
+							}
 						}
-					}
 
+					}
 				}
+
+			} else {
+
+				// 优先查找主题中的指定默认模版
+				$located = locate_template( [ "{$folder_name}/{$slug}.php", "{$slug}.php" ] );
+
+				// 如果默认位置没有默认模版，加载主题中的默认模板
+				if ( '' === $located && file_exists( $default_path . "/{$slug}.php" ) ) {
+					$located = $default_path . "/{$slug}.php";
+				}
+
 			}
 
 		} else {
 
-			// 优先查找主题中的指定默认模版
-			$located = locate_template( [ "{$folder_name}/{$slug}.php", "{$slug}.php" ] );
-
-			// 如果默认位置没有默认模版，加载主题中的默认模板
-			if ( '' === $located && file_exists( $default_path . "/{$slug}.php" ) ) {
-				$located = $default_path . "/{$slug}.php";
+			if ( '' !== $name ) {
+				$templates[] = "{$slug}-{$name}.php";
 			}
 
+			$templates[] = "{$slug}.php";
+
+			$located = locate_template( $templates );
+
+		}
+
+
+		if ( '' === $located ) {
+			return false;
 		}
 
 		/**
